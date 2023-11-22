@@ -7,10 +7,10 @@
     <script src = "../static/entry.js"></script>
     <title>Creator signin/signup</title>
 </head>
-<body>
+<body class="concertBackgroundImage">
     <div class="container" id="container">
         <div class="form-container sign-up-container">
-            <form action="creator-sign-up">
+            <form action="creator-sign-up" method="POST">
                 <h1>Create Account</h1>
                 <input name="name" type="text" placeholder="Name" />
                 <input name="email" type="email" placeholder="Email" />
@@ -19,7 +19,7 @@
             </form>
         </div>
         <div class="form-container sign-in-container">
-            <form action="creator-sign-in">
+            <form action="creator-sign-in" method="POST">
                 <h1>Sign in</h1>
                 <input name="email" type="email" placeholder="Email" />
                 <input name="password" type="password" placeholder="Password" />

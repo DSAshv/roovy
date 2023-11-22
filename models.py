@@ -1,12 +1,7 @@
 from sqlalchemy import Column, String, Enum, ForeignKey, Date, Float, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
-from flask_sqlalchemy import SQLAlchemy
-from app import app
-
-db = SQLAlchemy(app)
+from app import db
 Base = db.Model
-
-
 class User(Base):
     __tablename__ = 'USER'
 
@@ -14,8 +9,8 @@ class User(Base):
     email = Column(String, nullable=False)
     name = Column(String, nullable=False)
     role = Column(Enum('admin', 'creator', 'user', name='role_enum'), nullable=False)
-    status = Column(Enum('flagged', 'blocked', name='status_enum'))
-    __table_args__ = (UniqueConstraint('email', 'role'))
+    status = Column(Enum('flagged', 'blocked', 'live', name='status_enum'))
+    __table_args__ = (UniqueConstraint('email', 'role'),)
 
 
 class UserCredentials(Base):
@@ -36,7 +31,7 @@ class Song(Base):
     song_id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
     created_on = Column(DateTime, nullable=False)
-    status = Column(Enum('flagged', 'blocked', name='status_enum'))
+    status = Column(Enum('flagged', 'blocked', 'live', name='status_enum'))
     album_id = Column(String, ForeignKey('ALBUM.album_id'))
     thumbnail_path = Column(String, nullable=False)
 
@@ -64,7 +59,7 @@ class Album(Base):
     genre = Column(String, nullable=False)
     artist = Column(String, nullable=False)
     thumbnail_path = Column(String, nullable=False)
-    status = Column(Enum('flagged', 'blocked', name='status_enum'))
+    status = Column(Enum('flagged', 'blocked', 'live', name='status_enum'))
 
     songs = relationship("Song", back_populates="album")
 

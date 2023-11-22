@@ -231,3 +231,14 @@ button.ghost {
 	letter-spacing: 15px;
 	align-items: center;
 }
+
+.concertBackgroundImage{
+    background: url("../static/bg_concert.avif");
+    background-size: cover;
+    background-size: cover;
+    backdrop-filter: blur(5px);
+}
+
+.lightColorText{
+    color:white;
+}
