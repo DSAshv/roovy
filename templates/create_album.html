@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Album</title>
+</head>
+<body>
+<h1>Create Album</h1>
+
+<form method="POST" action="{{ url_for('create_album') }}">
+    {{ csrf_token }}
+
+    <div>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+    </div>
+
+    <div>
+        <label for="genre">Genre:</label>
+        <input type="text" id="genre" name="genre" required>
+    </div>
+
+    <div>
+        <label for="artist">Artist:</label>
+        <input type="text" id="artist" name="artist" required>
+    </div>
+
+    <div>
+        <label for="thumbnail_path">Thumbnail Path:</label>
+        <input type="text" id="thumbnail_path" name="thumbnail_path" required>
+    </div>
+
+    <div>
+        <button type="submit">Create Album</button>
+    </div>
+</form>
+</body>
+</html>

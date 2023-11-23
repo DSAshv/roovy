@@ -23,7 +23,7 @@ def authorizeUser(email, password, role):
         if (result is None):
             return (False, None, None)
 
-        return (result is not None, result.user_id, result.status)
+        return (True, result.user_id, result.status)
 
     except Exception as e:
         return (False, None, None)

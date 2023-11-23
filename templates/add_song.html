@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Song</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<h1>Add Song</h1>
+
+<form method="POST" action="{{ url_for('add_song') }}">
+    {{ csrf_token }}
+
+    <div>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+    </div>
+
+    <div>
+        <label for="created_on">Created On:</label>
+        <input type="datetime-local" id="created_on" name="created_on" required>
+    </div>
+
+    <div>
+        <label for="status">Status:</label>
+        <select id="status" name="status" required>
+            <option value="flagged">Flagged</option>
+            <option value="blocked">Blocked</option>
+            <option value="live">Live</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="album_id">Album ID:</label>
+        <select id="album_id" name="album_id" required>
+            {% for album_id, album_name in album_choices %}
+            <option value="{{ album_id }}">{{ album_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="thumbnail_path">Thumbnail Path:</label>
+        <input type="text" id="thumbnail_path" name="thumbnail_path" required>
+    </div>
+
+    <div>
+        <label for="type">Type:</label>
+        <select id="type" name="type" required>
+            <option value="song">Song</option>
+            <option value="lyric">Lyric</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="content_path">Content Path:</label>
+        <input type="text" id="content_path" name="content_path" required>
+    </div>
+
+    <div>
+        <button type="submit">Add Song</button>
+    </div>
+</form>
+
+{% if error %}
+<p style="color: red;">{{ error }}</p>
+{% endif %}
+</body>
+</html>

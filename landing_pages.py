@@ -5,7 +5,4 @@ def adminLandingPage():
     return "user page"
 
 def creatorLandingPage():
-    return "user page"
-
-
-
+    return "creator page"

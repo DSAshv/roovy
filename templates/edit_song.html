@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Song</title>
+
+    <!-- Include the CSS file (modify the path as needed) -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<h1>Edit Song</h1>
+
+<form method="POST" action="{{ url_for('edit_song', song_id=song.song_id) }}">
+    {{ csrf_token }}
+
+    <div>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" value="{{ song.name }}" required>
+    </div>
+
+    <div>
+        <label for="created_on">Created On:</label>
+        <input type="datetime-local" id="created_on" name="created_on" value="{{ song.created_on }}" required>
+    </div>
+
+    <div>
+        <label for="status">Status:</label>
+        <select id="status" name="status" required>
+            <option value="flagged" {% if song.status==
+            'flagged' %}selected{% endif %}>Flagged</option>
+            <option value="blocked" {% if song.status==
+            'blocked' %}selected{% endif %}>Blocked</option>
+            <option value="live" {% if song.status==
+            'live' %}selected{% endif %}>Live</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="album_id">Album ID:</label>
+        <select id="album_id" name="album_id" required>
+            {% for album_id, album_name in album_choices %}
+            <option value="{{ album_id }}" {% if song.album_id== album_id %}selected{% endif %}>{{ album_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="thumbnail_path">Thumbnail Path:</label>
+        <input type="text" id="thumbnail_path" name="thumbnail_path" value="{{ song.thumbnail_path }}" required>
+    </div>
+
+    <div>
+        <label for="type">Type:</label>
+        <select id="type" name="type" required>
+            <option value="song" {% if song.content.type==
+            'song' %}selected{% endif %}>Song</option>
+            <option value="lyric" {% if song.content.type==
+            'lyric' %}selected{% endif %}>Lyric</option>
+        </select>
+    </div>
+
+    <div>
+        <label for="content_path">Content Path:</label>
+        <input type="text" id="content_path" name="content_path" value="{{ song.content.content_path }}" required>
+    </div>
+
+    <div>
+        <button type="submit">Update Song</button>
+    </div>
+</form>
+
+{% if error %}
+<p style="color: red;">{{ error }}</p>
+{% endif %}
+</body>
+</html>
