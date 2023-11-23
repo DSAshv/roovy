@@ -138,3 +138,22 @@ def edit_album():
             flash("Error editing the album. Please try again.", "error"), 500
 
     return render_template('edit_album.html', album=album), 200
+
+
+from flask import render_template, redirect, request, flash, url_for, session
+from sqlalchemy.exc import IntegrityError
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+def profile_page():
+    user_id = session.get("uid")
+    if (not user_id):
+        flash("Authenticate first", "error")
+        return redirect(url_for("index"))
+    if request.method == 'POST':
+        if (account_module.updateProfile(request, user_id)):
+            flash("Profile updated successfully", "success")
+        else:
+            flash("Email is already in use. Please choose another one.", "error")
+
+    return render_template('profile.html', user=account_module.getUser(user_id))
