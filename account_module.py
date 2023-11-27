@@ -47,6 +47,5 @@ def updateProfile(request, user_id):
         db.session.rollback()
         return False
 
-
 def getUser(uid):
     return User.query.get(uid)

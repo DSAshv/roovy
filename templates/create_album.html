@@ -1,40 +1,86 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Album</title>
-</head>
-<body>
-<h1>Create Album</h1>
+<style>
+    #addalbum h1 {
+        text-align: center;
+    }
 
-<form method="POST" action="{{ url_for('create_album') }}">
-    {{ csrf_token }}
+    #addalbum form {
+        max-width: 400px;
+        margin: 0 auto;
+    }
 
-    <div>
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required>
-    </div>
+    #addalbum div {
+        margin-bottom: 15px;
+    }
 
-    <div>
-        <label for="genre">Genre:</label>
-        <input type="text" id="genre" name="genre" required>
-    </div>
+    #addalbum label {
+        display: block;
+        margin-bottom: 5px;
+    }
 
-    <div>
-        <label for="artist">Artist:</label>
-        <input type="text" id="artist" name="artist" required>
-    </div>
+    #addalbum input,
+    #addalbum select {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
 
-    <div>
-        <label for="thumbnail_path">Thumbnail Path:</label>
-        <input type="text" id="thumbnail_path" name="thumbnail_path" required>
-    </div>
+    #addalbum button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
 
-    <div>
-        <button type="submit">Create Album</button>
-    </div>
-</form>
-</body>
-</html>
+    #addalbum button:hover {
+        background-color: #45a049;
+    }
+
+    #addalbum p {
+        text-align: center;
+        margin-top: 15px;
+    }
+
+</style>
+<div id="addalbum">
+    <form method="POST" action="{{ url_for('createAlbum') }}">
+        {{ csrf_token }}
+
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <div>
+            <label for="genre">Genre:</label>
+            <input type="text" id="genre" name="genre" required>
+        </div>
+
+        <div>
+            <label for="artist">Artist:</label>
+            <input type="text" id="artist" name="artist" required>
+        </div>
+
+        <div>
+            <label for="thumbnail_path">Thumbnail Path:</label>
+            <input type="text" id="thumbnail_path" name="thumbnail_path" required>
+        </div>
+
+        <div>
+            <label for="created_on">Created On:</label>
+            <input type="datetime-local" id="created_on" name="created_on" required readonly>
+        </div>
+
+        <div>
+            <button type="submit">Create Album</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    var currentDatetime = new Date().toISOString().slice(0, 16);
+    document.getElementById("created_on").value = currentDatetime;
+</script>

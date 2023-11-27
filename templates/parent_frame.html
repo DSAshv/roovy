@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music App</title>
+    <style>
+        a{
+            text-decoration: none;
+            color:#333;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+
+        #navbar {
+            width: 200px;
+            height: 100%;
+            background-color: #333;
+            color: #fff;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #navbar a {
+            text-decoration: none;
+            color: #fff;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+        #navbar > .first{
+            margin-top:20px;
+            border-top: 1px solid #444;
+        }
+        #navbar a:hover {
+            background-color: #555;
+        }
+        #navbar h6{
+            margin-top:-20px;
+        }
+
+        #main {
+            margin-left: 200px;
+            padding: 20px;
+        }
+
+
+        #header {
+            display: flex;
+            justify-content:space-between;
+            align-items: center;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 200px;
+        }
+
+        #headerRight{
+            display: flex;
+            justify-content:flex-end;
+            align-items: center;
+            padding: 10px;
+        }
+
+        #headerLeft{
+            display: flex;
+            justify-content:flex-start;
+            align-items: center;
+            padding: 10px;
+            font-size:22px;
+            font-weight:600px;
+        }
+
+        #profile {
+            margin-right: 20px;
+            cursor: pointer;
+        }
+
+        #search {
+            padding:5px;
+            margin-right: 20px;
+            cursor: pointer;
+            color: #fff;
+        }
+
+        #search:hover{
+            text-shadow: 2px 2px;
+        }
+
+        #searchBar {
+            width: 150px;
+            padding: 8px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            outline: none;
+            margin-right:5px;
+        }
+
+        #logOut{
+            cursor: pointer;
+        }
+
+        #mainContent {
+            margin-top: 40px;
+            overflow: scroll;
+            height: 80vh;
+        }
+
+        .song {
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position:relative;
+        }
+
+        .songThumbnail {
+            width:50px;
+        }
+
+        .songDetails {
+           display:flex;
+           padding: 2px 5px;
+           justify-content:space-between;
+           width:100%;
+        }
+
+        .songName{
+             width:100%;
+            padding:10px 5px;
+        }
+
+        .songActions {
+            display: flex;
+            align-items: center;
+        }
+
+        .addToPlaylistBtn {
+            padding: 8px;
+            margin-right: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .playlistDropdown {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .playlistDropdown.show {
+            display: block;
+        }
+
+        .playlistItem {
+            padding: 12px;
+            cursor: pointer;
+        }
+
+        .playBtn {
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .songRating{
+            margin-right:20px;
+        }
+
+
+        .creatorInNav{
+            position:absolute;
+            bottom:18px;
+        }
+
+        .banner{
+            height:40vh;
+        }
+
+        #currentView{
+            float:left;
+        }
+
+        #player {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: #333;
+            color: #fff;
+            position: fixed;
+            bottom: 0;
+            left:200px;
+            right:0;
+            height:50px;
+            padding: 10px;
+            border-left: 2px solid #444;
+        }
+
+        #volumeControl,
+        #playPause,
+        #expand {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .album {
+            display: flex;
+            border: 1px solid #ccc;
+            margin: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .album img {
+            width: 100px; /* Set the width as needed */
+            height: auto; /* Maintain aspect ratio */
+            margin-right: 10px;
+        }
+
+        .albumDetails {
+            flex: 1; /* Take remaining width */
+        }
+
+        .albumDetails h2 {
+            margin-bottom: 5px;
+        }
+
+        .albumDetails p {
+            margin: 0;
+            color: #555;
+        }
+
+        .album a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #007BFF;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .album a:hover {
+            background-color: #0056b3;
+        }
+
+
+    </style>
+</head>
+<body>
+
+<div id="navbar">
+    <div><h1>ROOVY</h1></div>
+    <div><h6>The Music App</h6></div>
+    {% for element in nav_elements %}
+    <a href="{{ element.url }}" class="{{ element.class }}">{{ element.title }}</a>
+    {% endfor %}
+</div>
+True
+
+<div id="main">
+    <div id="header">
+        <div id="headerLeft">{{ header_left }}</div>
+        <div id="headerRight">
+            <input placeholder="search song/album/artist" id="searchBar">
+            <div id="search">&#128269;</div>
+            <div id="profile"><a href="../profile">Profile</a></div>
+            <div id="logOut"><a href="../logout">Log out</a></div>
+        </div>
+    </div>
+
+    <div id="mainContent">
+        {{ content | safe}}
+    </div>
+</div>
+
+<div id="player">
+    <div id="volumeControl">&#128266;</div>
+    <div id="currentSong">{{ current_song }}</div>
+    <div id="playPause">&#9654;</div>
+    <div id="expand">&#9650;</div>
+</div>
+
+</body>
+</html>

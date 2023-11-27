@@ -6,48 +6,110 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+
+    <style>
+        .bodyCenter{
+            text-align:center;
+        }
+        a{
+            text-decoration:none;
+            color: grey;
+        }
+        a:hover{
+            color:#333;
+        }
+        input{
+            padding: 8px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            outline: none;
+            margin-right:5px;
+            background-color:#fff;
+        }
+
+        #buttonsDiv, .status{
+            display:flex;
+            justify-content:space-between;
+            width:100%;
+            align-items:center;
+        }
+        .status{
+            justify-content: flex-start;
+            width:100%;
+        }
+        .status > p{
+            margin-right:20px;
+        }
+        #usrImage{
+            width:100px;
+            margin:20px 0px;
+        }
+    </style>
 </head>
 <body>
-<h1>Profile Page</h1>
-
-<!--    {% with messages = get_flashed_messages() %}-->
-<!--        {% if messages %}-->
-<!--            <ul class="flashes">-->
-<!--                {% for message in messages %}-->
-<!--                    <li>{{ message }}</li>-->
-<!--                {% endfor %}-->
-<!--            </ul>-->
-<!--        {% endif %}-->
-<!--    {% endwith %}-->
+<h1 class="bodyCenter">Profile Page</h1>
 
 <form method="POST" action="{{ url_for('profile_page') }}">
     {{ csrf_token }}
-
+    <h2 class="bodyCenter">Hello {{ user.name }}!</h2>
+    <div class="bodyCenter">
+        <img id="usrImage" src="../static/no-user-image.png">
+    </div>
     <div>
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" value="{{ user.name }}" required>
+        <label for="name">Username</label>
+        <input type="text" id="name" name="name" value="{{ user.name }}" required disabled>
     </div>
 
     <div>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" value="{{ user.email }}" required>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="{{ user.email }}" required disabled>
     </div>
 
-    <div>
-        <label for="password">Password:</label>
+    <div id="passDiv">
+        <label for="password">Password</label>
         <input type="password" id="password" name="password" placeholder="Enter new password">
     </div>
-    <div>
-        <p>Role: {{ user.role }}</p>
-    </div>
 
-    <div>
+    <div class="status">
+        <p>Role: {{ user.role }}</p>
         <p>Status: {{ user.status }}</p>
     </div>
 
-    <div>
-        <button type="submit">Update Profile</button>
+    <div id="buttonsDiv">
+        <button id="editButton" type="button" onclick="toggleEdit()">Edit</button>
+        <button id="submitButton" type="submit">Update Profile</button>
     </div>
 </form>
+<div class="bodyCenter"><a href="../"> < Go back to home page &#8962;</a></div>
 </body>
+<script>
+    var nameInput = document.getElementById("name");
+    var emailInput = document.getElementById("email");
+    var passwordInput = document.getElementById("passDiv");
+    var submitButton = document.getElementById("submitButton");
+    var editButton = document.getElementById("editButton");
+
+    passwordInput.style.display = "none";
+    submitButton.style.display = "none";
+    function toggleEdit() {
+        if (editButton.innerText === "Cancel"){
+            editButton.innerText = "Edit"
+        }else{
+            editButton.innerText = "Cancel"
+        }
+        nameInput.disabled = !nameInput.disabled;
+        emailInput.disabled = !emailInput.disabled;
+
+        if (passwordInput.style.display === "none" && submitButton.style.display === "none") {
+            passwordInput.style.display = "block";
+            submitButton.style.display = "block";
+        } else {
+            passwordInput.style.display = "none";
+            submitButton.style.display = "none";
+        }
+
+        submitButton.disabled = !submitButton.disabled;
+    }
+
+</script>
 </html>

@@ -1,15 +1,19 @@
 from app import db
 from models import Album, Song, SongContent
+from util import get_uid, generate_unique_string, formatDate
 
 
-def createAlbum(request):
+def addAlbumToDB(request):
     try:
         new_album = Album(
-            name=request.form.name.data,
-            genre=request.form.genre.data,
-            artist=request.form.artist.data,
-            thumbnail_path=request.form.thumbnail_path.data,
-            status='live'
+            album_id=generate_unique_string(),
+            name=request.form.get("name"),
+            genre=request.form.get("genre"),
+            artist=request.form.get("artist"),
+            thumbnail_path=request.form.get("thumbnail_path"),
+            status='live',
+            created_by=get_uid(),
+            created_on=formatDate(request.form.get("created_on"))
         )
         db.session.add(new_album)
         db.session.commit()
@@ -19,9 +23,10 @@ def createAlbum(request):
         return False
 
 
-def add_song(request):
+def addSongToDB(request):
+    song_id = generate_unique_string()
     name = request.form.get('name')
-    created_on = request.form.get('created_on')
+    created_on = formatDate(request.form.get('created_on'))
     status = request.form.get('status')
     album_id = request.form.get('album_id')
     thumbnail_path = request.form.get('thumbnail_path')
@@ -32,14 +37,17 @@ def add_song(request):
         return False, {"error": "missing parameter"}
     try:
         new_song = Song(
+            song_id=song_id,
             name=name,
             created_on=created_on,
             status=status,
             album_id=album_id,
-            thumbnail_path=thumbnail_path
+            thumbnail_path=thumbnail_path,
+            created_by=get_uid()
         )
 
         new_content = SongContent(
+            song_id=song_id,
             type=song_type,
             content_path=content_path
         )
@@ -51,10 +59,10 @@ def add_song(request):
 
     except Exception as e:
         db.session.rollback()
-        return False, {"error": e}
+        return False
 
 
-def editSong(request, song):
+def editSongInDB(request, song):
     song.name = request.form.get('name')
     song.created_on = request.form.get('created_on')
     song.status = request.form.get('status')
@@ -69,10 +77,6 @@ def editSong(request, song):
     except Exception as e:
         db.session.rollback()
         return False
-
-
-def getSongToEdit(song_id):
-    return Song.query.get(song_id)
 
 
 def editAlbum(request, album):
@@ -90,5 +94,55 @@ def editAlbum(request, album):
         return False
 
 
-def getAlbum(album_id):
-    return Album.query.get(album_id)
+def get_songs_by_user():
+    user_id = get_uid()
+    if user_id is not None:
+        songs_by_user = (
+            db.session.query(Song)
+            .filter(Song.created_by == user_id)
+            .order_by(Song.created_on.desc())
+            .all()
+        )
+        all_songs = []
+        for song in songs_by_user:
+            song_dict = {
+                "song_id": song.song_id,
+                "name": song.name,
+                "created_on": song.created_on,
+                "status": song.status,
+                "album_id": song.album_id,
+                "thumbnail_path": song.thumbnail_path,
+            }
+            all_songs.append(song_dict)
+
+        all_songs_tuple = tuple(all_songs)
+        return all_songs_tuple
+    else:
+        return []
+
+
+def get_albums_by_user():
+    user_id = get_uid()
+    if user_id is not None:
+        all_albums = (
+            db.session.query(Album)
+            .filter(Album.created_by == user_id)
+            .order_by(Album.created_on.desc())
+            .all()
+        )
+        albums_list = []
+        for album in all_albums:
+            album_details = {
+                "album_id": album.album_id,
+                "name": album.name,
+                "genre": album.genre,
+                "artist": album.artist,
+                "thumbnail_path": album.thumbnail_path,
+                "status": album.status,
+            }
+            albums_list.append(album_details)
+
+        return albums_list
+
+    else:
+        return []

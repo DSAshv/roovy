@@ -1,11 +1,11 @@
 import account_module
-from flask import render_template, redirect, request, session, Flask, Blueprint, url_for, flash
-
 import creator_module
 from landing_pages import userLandingPage, adminLandingPage, creatorLandingPage
 from models import Album
 from util import generate_unique_string
 from app import app
+from flask import render_template, redirect, request, flash, url_for, session
+
 @app.route("/")
 def index():
     if not session.get("uid"):
@@ -90,10 +90,10 @@ def logout():
 
 
 @app.route('/create_album', methods=['GET', 'POST'])
-def create_album():
+def createAlbum():
     if (request.method == 'GET'):
-        return render_template("create_album.html"), 200
-    if (creator_module.createAlbum(request.form)):
+        return creatorLandingPage("create_album"), 200
+    if (creator_module.addAlbumToDB(request)):
         return 'album created', 200
     else:
         flash("Album creation failed. Please try again.", "error")
@@ -101,12 +101,10 @@ def create_album():
 
 
 @app.route('/create_song', methods=['GET', 'POST'])
-def create_song():
+def createSong():
     if (request.method == 'GET'):
-        album_choices = [(album.album_id, album.name) for album in Album.query.all()]
-        return render_template('add_song.html', album_choices=album_choices), 200
-
-    if (creator_module.createSong(request.form)):
+        return creatorLandingPage("create_song")
+    if (creator_module.addSongToDB(request)):
         return 'song created', 200
     else:
         flash("Song creation failed. Please try again.", "error")
@@ -114,13 +112,10 @@ def create_song():
 
 
 @app.route('/edit_song/<string:song_id>', methods=['GET', 'POST'])
-def edit_song():
-    song = creator_module.getSongToEdit(request.path.song_id)
+def editSong():
     if (request.method == 'GET'):
-        album_choices = [(album.album_id, album.name) for album in Album.query.all()]
-        return render_template('edit_song.html', song=song, album_choices=album_choices)
-
-    if (creator_module.createSong(request.form)):
+        return creatorLandingPage("edit_song", request)
+    if (creator_module.editSongInDB(request.form)):
         return 'song edited', 200
     else:
         flash("Song editing failed. Please try again.", "error")
@@ -140,10 +135,6 @@ def edit_album():
     return render_template('edit_album.html', album=album), 200
 
 
-from flask import render_template, redirect, request, flash, url_for, session
-from sqlalchemy.exc import IntegrityError
-
-
 @app.route('/profile', methods=['GET', 'POST'])
 def profile_page():
     user_id = session.get("uid")
@@ -157,3 +148,19 @@ def profile_page():
             flash("Email is already in use. Please choose another one.", "error")
 
     return render_template('profile.html', user=account_module.getUser(user_id))
+
+
+@app.route('/songs', methods=['GET'])
+@app.route('/albums', methods=['GET'])
+@app.route('/mysongs', methods=['GET'])
+@app.route('/myalbums', methods=['GET'])
+@app.route('/playlists', methods=['GET'])
+def getContent():
+    content = request.path.lstrip("/")
+    if session.get("role") == "user":
+        return userLandingPage(content)
+    elif session.get("role") == "creator":
+        return creatorLandingPage(content)
+    else:
+        flash("Cannot load content.", "error")
+        return ({"error": "cannot get content."}), 500

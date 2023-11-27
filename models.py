@@ -1,7 +1,10 @@
 from sqlalchemy import Column, String, Enum, ForeignKey, Date, Float, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
-from app import db
+from app import db, app
+
 Base = db.Model
+
+
 class User(Base):
     __tablename__ = 'USER'
 
@@ -34,6 +37,7 @@ class Song(Base):
     status = Column(Enum('flagged', 'blocked', 'live', name='status_enum'))
     album_id = Column(String, ForeignKey('ALBUM.album_id'))
     thumbnail_path = Column(String, nullable=False)
+    created_by = Column(String, nullable=False)
 
     album = relationship("Album", back_populates="songs")
 
@@ -48,20 +52,7 @@ class SongContent(Base):
     song = relationship("Song", back_populates="content")
 
 
-Song.content = relationship("SongContent", back_populates="song")
-
-
-class Album(Base):
-    __tablename__ = 'ALBUM'
-
-    album_id = Column(String, primary_key=True)
-    name = Column(String, nullable=False)
-    genre = Column(String, nullable=False)
-    artist = Column(String, nullable=False)
-    thumbnail_path = Column(String, nullable=False)
-    status = Column(Enum('flagged', 'blocked', 'live', name='status_enum'))
-
-    songs = relationship("Song", back_populates="album")
+Song.content = relationship("SongContent", back_populates="song", uselist=False)
 
 
 class Rating(Base):
@@ -75,7 +66,19 @@ class Rating(Base):
 
 Song.ratings = relationship("Rating", back_populates="song")
 
+class Album(Base):
+    __tablename__ = 'ALBUM'
 
+    album_id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    genre = Column(String, nullable=False)
+    artist = Column(String, nullable=False)
+    thumbnail_path = Column(String, nullable=False)
+    status = Column(Enum('flagged', 'blocked', 'live', name='status_enum'))
+    created_by = Column(String, nullable=False)
+    created_on = Column(DateTime, nullable=False)
+
+    songs = relationship("Song", back_populates="album")
 class Playlist(Base):
     __tablename__ = 'PLAYLIST'
 
@@ -101,3 +104,6 @@ class SongsInPlaylist(Base):
 
 Playlist.songs = relationship("SongsInPlaylist", back_populates="playlist")
 Song.playlists = relationship("SongsInPlaylist", back_populates="song")
+
+with app.app_context():
+    db.create_all()

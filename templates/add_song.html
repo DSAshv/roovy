@@ -1,16 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Song</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-<h1>Add Song</h1>
+<style>
+    #addsong h1 {
+        text-align: center;
+    }
 
-<form method="POST" action="{{ url_for('add_song') }}">
+    #addsong form {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    #addsong div {
+        margin-bottom: 15px;
+    }
+
+    #addsong label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    #addsong input,
+    #addsong select {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    #addsong button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    #addsong button:hover {
+        background-color: #45a049;
+    }
+
+    #addsong p {
+        text-align: center;
+        margin-top: 15px;
+    }
+</style>
+<div id="addsong">
+    <form method="POST" action="{{ url_for('createSong') }}">
     {{ csrf_token }}
 
     <div>
@@ -20,7 +55,7 @@
 
     <div>
         <label for="created_on">Created On:</label>
-        <input type="datetime-local" id="created_on" name="created_on" required>
+        <input type="datetime-local" id="created_on" name="created_on" required readonly>
     </div>
 
     <div>
@@ -33,7 +68,7 @@
     </div>
 
     <div>
-        <label for="album_id">Album ID:</label>
+        <label for="album_id">Album:</label>
         <select id="album_id" name="album_id" required>
             {% for album_id, album_name in album_choices %}
             <option value="{{ album_id }}">{{ album_name }}</option>
@@ -63,9 +98,12 @@
         <button type="submit">Add Song</button>
     </div>
 </form>
-
 {% if error %}
 <p style="color: red;">{{ error }}</p>
 {% endif %}
-</body>
-</html>
+</div>
+
+<script>
+    var currentDatetime = new Date().toISOString().slice(0, 16);
+    document.getElementById("created_on").value = currentDatetime;
+</script>
