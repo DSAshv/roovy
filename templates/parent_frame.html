@@ -122,38 +122,6 @@
             height: 80vh;
         }
 
-        .song {
-            padding: 15px;
-            background-color: #fff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position:relative;
-        }
-
-        .songThumbnail {
-            width:50px;
-        }
-
-        .songDetails {
-           display:flex;
-           padding: 2px 5px;
-           justify-content:space-between;
-           width:100%;
-        }
-
-        .songName{
-             width:100%;
-            padding:10px 5px;
-        }
-
-        .songActions {
-            display: flex;
-            align-items: center;
-        }
-
         .addToPlaylistBtn {
             padding: 8px;
             margin-right: 10px;
@@ -236,13 +204,13 @@
         }
 
         .album img {
-            width: 100px; /* Set the width as needed */
-            height: auto; /* Maintain aspect ratio */
+            width: 150px;
             margin-right: 10px;
+             object-fit: cover;
         }
 
         .albumDetails {
-            flex: 1; /* Take remaining width */
+            margin-left:30px;
         }
 
         .albumDetails h2 {
@@ -250,11 +218,11 @@
         }
 
         .albumDetails p {
-            margin: 0;
+            margin:5px;
             color: #555;
         }
 
-        .album a {
+        .album a, .album button {
             display: inline-block;
             margin-top: 10px;
             padding: 5px 10px;
@@ -264,8 +232,226 @@
             border-radius: 5px;
         }
 
-        .album a:hover {
+        .album a:hover, .album button:hover {
             background-color: #0056b3;
+        }
+
+        .song {
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            position:relative;
+            height:100px;
+        }
+
+        .song .songThumbnail img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-right:20px;
+        }
+
+        .song .songDetails {
+           display:flex;
+           padding: 2px 5px;
+           justify-content:space-between;
+           width:50%;
+        }
+
+        .song .songName {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            padding:10px 5px;
+        }
+
+        .song .songInfo {
+            font-size: 14px;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        .songInfo p {
+            margin-right: 25px;
+        }
+
+        .song .songActions {
+            display: flex;
+            align-items: center;
+            width: 40%;
+        }
+
+        .song .playBtn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            width:35%;
+        }
+
+        .song .editBtn {
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-left: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .songActions {
+            display: flex;
+            align-items: center;
+            justify-content:space-between;
+        }
+
+
+        #addPlaylistBtn {
+            cursor: pointer;
+        }
+
+        #addPlaylistForm label, #addPlaylistForm input {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .playlist {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+        }
+
+        .playlist h2 {
+            margin: 0;
+            padding-bottom: 5px;
+        }
+
+        .playlist a {
+            text-decoration: none;
+            color: #007BFF;
+        }
+
+        .playlist a:hover {
+            text-decoration: underline;
+        }
+
+        .editSong {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .editSong form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editSong div {
+            margin-bottom: 15px;
+        }
+
+        .editSong label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .editSong input,
+        .editSong select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .editSong button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .editSong button:hover {
+            background-color: #45a049;
+        }
+
+        .editSong p {
+            margin-top: 10px;
+        }
+
+        .editAlbum {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .editAlbum form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editAlbum div {
+            margin-bottom: 15px;
+        }
+
+        .editAlbum label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .editAlbum input,
+        .editAlbum select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .editAlbum button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .editAlbum button:hover {
+            background-color: #45a049;
+        }
+
+        .editAlbum p {
+            margin-top: 10px;
+        }
+
+        a.delete-link {
+            color: #d9534f;
+            text-decoration: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        a.delete-link:hover {
+            text-decoration: underline;
         }
 
 
@@ -306,4 +492,5 @@ True
 </div>
 
 </body>
+
 </html>

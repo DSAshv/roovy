@@ -1,26 +1,24 @@
 from sqlalchemy import func
 
 from app import db
-from models import Song, Rating, Album, Playlist
+from models import Song, Rating, Album, Playlist, User
 from sqlalchemy.orm import joinedload
+
+from util import getPlaylistsForUser, get_uid, getAlbumFromId
 
 
 def get_all_songs():
-    songs_with_ratings = (
-        db.session.query(
-            Song,
-            func.coalesce(func.avg(Rating.rating), 0).label("average_rating")
-        )
+    songs_with_details = (
+        db.session.query(Song, Album)
         .outerjoin(Rating, Song.song_id == Rating.song_id)
-        .group_by(Song.song_id)
         .options(joinedload(Song.ratings))
+        .join(Album, Song.album_id == Album.album_id)
         .order_by(Song.created_on.desc())
         .all()
     )
 
     all_songs = []
-    for song in songs_with_ratings:
-        song = song[0]
+    for song, album in songs_with_details:
         song_dict = {
             "song_id": song.song_id,
             "name": song.name,
@@ -28,16 +26,22 @@ def get_all_songs():
             "status": song.status,
             "album_id": song.album_id,
             "thumbnail_path": song.thumbnail_path,
-            "ratings": [rating.rating for rating in song.ratings] if song.ratings else [],
+            "ratings": [rating.rating for rating in song.ratings] if song.ratings else [0],
+            "album_name": album.name,
+            "artist_name": album.artist,
+            "genre": album.genre
         }
         all_songs.append(song_dict)
 
     all_songs_tuple = tuple(all_songs)
     return all_songs_tuple
 
-
 def generate_song_html_structure(song_details, editable):
-    edit_button = f'<button class="editBtn" onclick="editSong(\'{song_details["song_id"]}\')">Edit</button>' if editable else ''
+    user_playlists_dropdown_options = getUserPlaylistsDropdownOptions()
+    edit_button = f'''<a class="editBtn" href="../edit_song/{song_details['song_id']}">Edit</a>
+    <form id="deleteSongForm" action="/delete_song/{song_details['song_id']}" method="POST">
+    <button type="submit">Delete Song</button>
+    </form>''' if editable else ''
 
     html_structure = f"""
         <div class="song">
@@ -45,14 +49,26 @@ def generate_song_html_structure(song_details, editable):
                 <img src="{song_details['thumbnail_path']}" alt="Thumbnail">
             </div>
             <div class="songDetails">
-                <div class="songName">{song_details['name']}</div>
+                <div class="songName">
+                    <p>{song_details['name']}</p>
+                    <p>Album: {getAlbumFromId(song_details['album_id'])}</p>
+                </div>
                 <div class="songInfo">
-                    <p>Created On: {song_details['created_on']}</p>
-                    <p>Status: {song_details['status']}</p>
-                    <p>Album Name: {song_details['album_id']}</p>
+                        <p>Artist: {song_details['artist_name']}</p>
+                        <p>Genre: {song_details['genre']}</p>
+                        <p>Ratings: {', '.join(map(str, song_details['ratings']))}</p>
                 </div>
             </div>
             <div class="songActions">
+                <div class="addToPlaylistForm">
+                    <form method="POST" action="/add_to_playlist">
+                        <input type="hidden" name="song_id" value="{song_details['song_id']}">
+                        <select name="playlist_id">
+                            {user_playlists_dropdown_options}
+                        </select>
+                        <button type="submit">Add to Playlist</button>
+                    </form>
+                </div>
                 <button class="playBtn" onclick="playSong('{song_details['song_id']}')">Play</button>
                 {edit_button}
             </div>
@@ -94,7 +110,7 @@ def generate_album_html_structure(album, editable):
                 <p>Status: {album['status']}</p>
                 <!-- Add more details as needed -->
                 <a href="../album/{album['album_id']}">View Album</a>
-                {'<button onclick="editAlbum("' + album['album_id'] + ')">Edit Album</button>' if editable else ''}
+                {'<a href="../edit_album/' + album['album_id'] + '">Edit Album</a><form id="deleteAlbumForm" action="/delete_album/' + album['album_id'] + '" method="POST"><button type="submit">Delete Album</button></form>' if editable else ''}
             </div>
         </div>
     """
@@ -103,9 +119,14 @@ def generate_album_html_structure(album, editable):
 
 def get_all_playlists():
     try:
-        all_playlists = db.session.query(Playlist).all()
+        user_playlists = (
+            db.session.query(Playlist)
+            .join(User, Playlist.user_id == User.user_id)
+            .filter(User.user_id == get_uid())
+            .all()
+        )
         playlists_list = []
-        for playlist in all_playlists:
+        for playlist in user_playlists:
             playlist_details = {
                 "playlist_id": playlist.playlist_id,
                 "user_id": playlist.user_id,
@@ -124,8 +145,101 @@ def generate_playlist_html_structure(playlist):
     return f"""
         <div class="playlist">
             <h2>{playlist['name']}</h2>
-            <p>User ID: {playlist['user_id']}</p>
-            <!-- Add more details as needed -->
             <a href="../playlist/{playlist['playlist_id']}">View Playlist</a>
         </div>
     """
+
+
+def album_and_song_content(album_id):
+    try:
+        album = db.session.query(Album).filter_by(album_id=album_id).first()
+
+        if album:
+            user_playlists_dropdown_options = getUserPlaylistsDropdownOptions()
+            songs_in_album = album.songs
+            song_html_list = ""
+
+            for song in songs_in_album:
+                song_html_list += (
+                    f"""
+                    <div class="song">
+                        <div class="songThumbnail">
+                            <img src="{song.thumbnail_path}" alt="Thumbnail">
+                        </div>
+                        <div class="songDetails">
+                            <div class="songName">{song.name}</div>
+                        </div>
+                        <div class="songActions">
+                            <button class="playBtn" onclick="playSong('{song.song_id}')">Play</button>
+                        </div>
+                        <div class="addToPlaylistForm">
+                            <form method="POST" action="/add_to_playlist">
+                                <input type="hidden" name="song_id" value="{song.song_id}">
+                                <select name="playlist_id">
+                                    {user_playlists_dropdown_options}
+                                </select>
+                                <button type="submit">Add to Playlist</button>
+                            </form>
+                        </div>
+                    </div>
+                """).replace("\n", "")
+
+            return song_html_list
+        else:
+            return "Album not found", 404
+
+    except Exception as e:
+        print(f"Error rendering album and song content: {e}")
+        return "Internal Server Error", 500
+
+
+def playlist_and_song_content(playlist_id):
+    try:
+        playlist = db.session.query(Playlist).filter_by(playlist_id=playlist_id).first()
+
+        if playlist:
+            songs_in_playlist = playlist.songs
+            song_html_list = ""
+            user_playlists_dropdown_options = getUserPlaylistsDropdownOptions()
+
+            for song in songs_in_playlist:
+                song_html_list += (
+                    f"""
+                    <div class="song">
+                        <div class="songThumbnail">
+                            <img src="{song.song.thumbnail_path}" alt="Thumbnail">
+                        </div>
+                        <div class="songDetails">
+                            <div class="songName">{song.song.name}</div>
+                        </div>
+                        <div class="songActions">
+                            <button class="playBtn" onclick="playSong('{song.song.song_id}')">Play</button>
+                        </div>
+                        <div class="addToPlaylistForm">
+                            <form method="POST" action="/add_to_playlist">
+                                <input type="hidden" name="song_id" value="{song.song.song_id}">
+                                <select name="playlist_id">
+                                    {user_playlists_dropdown_options}
+                                </select>
+                                <button type="submit">Add to Playlist</button>
+                            </form>
+                        </div>
+                    </div>
+                """
+                ).replace("\n", "")
+
+            return song_html_list
+        else:
+            return "Album not found", 404
+
+    except Exception as e:
+        print(f"Error rendering album and song content: {e}")
+        return "Internal Server Error", 500
+
+
+def getUserPlaylistsDropdownOptions():
+    user_playlists = getPlaylistsForUser()
+    options = ""
+    for playlist in user_playlists:
+        options += f"<option value='{playlist['playlist_id']}'>{playlist['name']}</option>"
+    return options

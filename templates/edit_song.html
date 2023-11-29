@@ -1,5 +1,5 @@
-<div>
-    <form method="POST" action="{{ url_for('edit_song', song_id=song.song_id) }}">
+<div class="editSong">
+    <form method="POST" action="{{ url_for('editSong', song_id=song.song_id) }}">
         {{ csrf_token }}
 
         <div>

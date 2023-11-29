@@ -1,21 +1,21 @@
-from flask import render_template
+from flask import render_template, url_for
 
 from app import db
 from creator_module import get_songs_by_user, get_albums_by_user
 from html_structure_render import get_all_songs, get_all_albums, generate_song_html_structure, \
-    generate_album_html_structure, get_all_playlists, generate_playlist_html_structure
+    generate_album_html_structure, get_all_playlists, generate_playlist_html_structure, album_and_song_content, \
+    playlist_and_song_content
 from models import Album
-from util import get_uid, getSongToEdit
+from util import get_uid, getSongFromId, getAlbumFromId, getPlaylistFromId, getAlbumsForUser
 
 nav_elements = ()
-
 
 def setNavElems(elems):
     global nav_elements
     nav_elements = elems
 
 
-def userLandingPage(content="songs"):
+def userLandingPage(content="songs", request=None):
     setNavElems((
         {'title': 'Songs', 'url': '../songs', 'class': 'first'},
         {'title': 'Albums', 'url': '../albums'},
@@ -28,6 +28,13 @@ def userLandingPage(content="songs"):
         return getAlbums()
     elif content == "playlists":
         return getPlaylists()
+    elif content == "getModuleContent":
+        module, id = request.path.split("/")[1:]
+        if module == "album":
+            return getAlbumAndSongs(id)
+        elif module == "playlist":
+            return getPlaylistAndSongs(id)
+
 
 def adminLandingPage():
     return "admin page"
@@ -61,8 +68,17 @@ def creatorLandingPage(content="songs", request=None):
     elif content == "create_album":
         return create_album()
     elif content == "edit_song":
-        song = getSongToEdit(request.path.song_id)
+        song = getSongFromId(request.path.split("/")[-1])
         return edit_song(song)
+    elif content == "edit_album":
+        album = getAlbumFromId(request.path.split("/")[-1])
+        return edit_album(album)
+    elif content == "getModuleContent":
+        module, id = request.path.split("/")[1:]
+        if module == "album":
+            return getAlbumAndSongs(id)
+        elif module == "playlist":
+            return getPlaylistAndSongs(id)
 
 
 def getSongs():
@@ -98,7 +114,7 @@ def getMyAlbums():
 
 
 def getPlaylists():
-    header_left = "> Playlists"
+    header_left = "> Playlist"
     content = render_playlist_content()
     current_song = "Now Playing: Album Name"
     return render_template('parent_frame.html', header_left=header_left, content=content, current_song=current_song,
@@ -155,7 +171,14 @@ def render_my_albums_content():
 
 def render_playlist_content():
     all_playlist_tuple = get_all_playlists()
-    html = ""
+    html = f"""
+    <form id="addPlaylistForm" method="POST" action="{url_for('createPlaylist')}">
+        <label for="playlistName">Playlist Name:</label>
+        <input type="text" id="playlistName" name="name" required>
+
+        <button type="submit">Create Playlist</button>
+    </form>"""
+
     for playlist_details in all_playlist_tuple:
         html += generate_playlist_html_structure(playlist_details)
     return html
@@ -163,7 +186,33 @@ def render_playlist_content():
 
 def edit_song(song):
     header_left = "> Edit song"
-    content = render_template('edit_song.html', song)
+    album_choices = getAlbumsForUser()
+    album_choices = [(album.get("album_id"), album.get("name")) for album in album_choices]
+    content = render_template('edit_album.html', song=song, album_choices=album_choices)
     current_song = "Now Playing: None"
     return render_template('parent_frame.html', content=content, current_song=current_song, header_left=header_left,
+                           nav_elements=nav_elements)
+
+
+def edit_album(album):
+    header_left = "> Edit album"
+    content = render_template('edit_album.html', album=album)
+    current_song = "Now Playing: None"
+    return render_template('parent_frame.html', content=content, current_song=current_song, header_left=header_left,
+                           nav_elements=nav_elements)
+
+
+def getAlbumAndSongs(id):
+    header_left = "> Album > " + getAlbumFromId(id).name
+    content = album_and_song_content(id)
+    current_song = "Now Playing: Album Name"
+    return render_template('parent_frame.html', header_left=header_left, content=content, current_song=current_song,
+                           nav_elements=nav_elements)
+
+
+def getPlaylistAndSongs(id):
+    header_left = "> Playlist > " + getPlaylistFromId(id).name
+    content = playlist_and_song_content(id)
+    current_song = "Now Playing: Album Name"
+    return render_template('parent_frame.html', header_left=header_left, content=content, current_song=current_song,
                            nav_elements=nav_elements)
