@@ -2,9 +2,10 @@ import uuid
 from datetime import datetime
 
 from flask import session
+from sqlalchemy import func
 
 from app import db
-from models import Song, Album, Playlist, User
+from models import Song, Album, Playlist, User, SongsInPlaylist
 
 
 def generate_unique_string():
@@ -79,3 +80,31 @@ def getAlbumsForUser():
     except Exception as e:
         print(f"Error fetching albums for user: {e}")
         return []
+
+
+def getNameFromId():
+    return User.query.get(get_uid()).name
+
+
+def getNoOfSongsInAlbum(album_id):
+    try:
+        num_songs = (
+            db.session.query(func.count(Song.song_id))
+            .filter(Song.album_id == album_id)
+            .scalar()
+        )
+        return num_songs
+    except Exception as e:
+        return "No data available"
+
+
+def getNoOfSongsInPlaylist(playlist_id):
+    try:
+        num_songs = (
+            db.session.query(func.count(SongsInPlaylist.song_id))
+            .filter(SongsInPlaylist.playlist_id == playlist_id)
+            .scalar()
+        )
+        return num_songs
+    except Exception as e:
+        return "No data available"

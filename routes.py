@@ -209,5 +209,28 @@ def delete_song(song_id):
             return {"error": "Song not found or error occurred"}, 404
 
 
+@app.route('/delete_playlist/<playlist_id>', methods=['POST'])
+def delete_playlist(playlist_id):
+    if request.method == 'POST':
+        if creator_module.deletePlaylist(playlist_id):
+            return redirect("../playlists"), 200
+        else:
+            return {"error": "Song not found or error occurred"}, 404
+
+
+@app.route('/add_rating', methods=['POST'])
+def add_rating():
+    if request.method == 'POST' and creator_module.addRating(request.form.get("song_id"), request.form.get('rating')):
+        return redirect("../")
+    else:
+        return redirect("../")
+
+
+@app.route('/play_song/<string:song_id>', methods=['POST'])
+def play(song_id):
+    if request.method == 'POST':
+        return creator_module.playSong(song_id)
+
+
 if __name__ == '__main__':
     app.run(debug=True)

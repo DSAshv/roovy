@@ -1,8 +1,6 @@
-from sqlalchemy.orm import joinedload
-
-from app import db
-from models import Album, Song, SongContent, Playlist, Rating
-from util import get_uid, generate_unique_string, formatDate
+from sqlalchemy.orm import joinedload, aliased
+from models import Album, SongContent, Rating
+from util import get_uid, generate_unique_string, formatDate, getNameFromId
 
 
 def addAlbumToDB(request):
@@ -11,7 +9,7 @@ def addAlbumToDB(request):
             album_id=generate_unique_string(),
             name=request.form.get("name"),
             genre=request.form.get("genre"),
-            artist=request.form.get("artist"),
+            artist=getNameFromId(),
             thumbnail_path=request.form.get("thumbnail_path"),
             status='live',
             created_by=get_uid(),
@@ -201,7 +199,7 @@ def addSongToPlaylist(song_id, playlist_id):
 
 def deleteAlbum(album_id):
     try:
-        album = db.session.query(Album).filter_by(album_id=album_id).first()
+        album = db.session.query(Album).filter_by(album_id=album_id)
 
         if album:
             db.session.delete(album)
@@ -211,7 +209,6 @@ def deleteAlbum(album_id):
             return False
     except Exception as e:
         db.session.rollback()
-        print(f"Error deleting album: {e}")
         return False
 
 
@@ -227,5 +224,97 @@ def deleteSong(song_id):
             return False
     except Exception as e:
         db.session.rollback()
-        print(f"Error deleting song: {e}")
         return False
+
+
+def deletePlaylist(playlist_id):
+    try:
+        playlist = Playlist.query.get(playlist_id)
+        delete_statement = SongsInPlaylist.__table__.delete().where(SongsInPlaylist.playlist_id == playlist_id)
+        db.session.execute(delete_statement)
+        if playlist:
+            db.session.delete(playlist)
+            db.session.commit()
+        else:
+            return False
+
+    except Exception as e:
+        return False
+
+    return True
+
+
+def addRating(song_id, score):
+    try:
+        rating = Rating.query.get(song_id)
+        if rating is None:
+            new_rating = Rating(song_id=song_id, count=1, rating=score)
+            db.session.add(new_rating)
+        else:
+            rating.count += 1
+            rating.rating += float(score)
+
+        db.session.commit()
+        return True
+
+    except Exception as e:
+        return False
+
+
+def getAvgRating(song_id):
+    rating = Rating.query.get(song_id)
+    if rating == None:
+        return "0"
+    return rating.rating / rating.count
+
+
+def playSong(song_id):
+    toReturn = ""
+    data = get_songs_with_content_and_album(song_id)
+    if (data[1].type == "song"):
+        html_content = f"""
+        <div class="songDetails">
+            <h2>{data[0].name}</h2>
+            <p>Album: {data[2].name}</p>
+            <p>Genre: {data[2].genre}</p>
+            <p>Artist: {data[2].artist}</p>
+        </div>
+        """
+        toReturn += generate_player_content_template(html_content, data[0].thumbnail_path)
+    else:
+        with open(data[1].content_path, 'r') as file:
+            file_content = file.read()
+        toReturn += generate_player_content_template(f'<div>{file_content}</div>', data[0].thumbnail_path)
+
+    return [data[1].content_path, toReturn]
+
+
+def get_songs_with_content_and_album(song_id):
+    try:
+        song_alias = aliased(Song)
+        content_alias = aliased(SongContent)
+        album_alias = aliased(Album)
+
+        songs_data = (
+            db.session.query(song_alias, content_alias, album_alias)
+            .join(content_alias, song_alias.song_id == content_alias.song_id)
+            .join(album_alias, song_alias.album_id == album_alias.album_id)
+            .filter(song_alias.song_id == song_id)
+        )
+
+        return songs_data[0]
+
+    except Exception as e:
+        return []
+
+
+def generate_player_content_template(song_content, thumbnail_path):
+    return f"""
+    <div id="playerContentThumbnail">
+        <img src="{thumbnail_path}" alt="Thumbnail">
+    </div>
+
+    <div id="playerActualContent">
+        {song_content}
+    </div>
+    """

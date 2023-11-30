@@ -1,6 +1,5 @@
 <div class="editAlbum">
     <form method="POST" action="{{ url_for('editAlbum', album_id=album.album_id) }}">
-        {{ csrf_token }}
 
         <div>
             <label for="name">Name:</label>

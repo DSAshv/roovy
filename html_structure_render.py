@@ -1,17 +1,14 @@
-from sqlalchemy import func
-
+from flask import url_for
 from app import db
-from models import Song, Rating, Album, Playlist, User
-from sqlalchemy.orm import joinedload
+from creator_module import getAvgRating
+from models import Song, Album, Playlist, User
 
-from util import getPlaylistsForUser, get_uid, getAlbumFromId
+from util import getPlaylistsForUser, get_uid, getAlbumFromId, getNoOfSongsInAlbum, getNoOfSongsInPlaylist
 
 
 def get_all_songs():
     songs_with_details = (
         db.session.query(Song, Album)
-        .outerjoin(Rating, Song.song_id == Rating.song_id)
-        .options(joinedload(Song.ratings))
         .join(Album, Song.album_id == Album.album_id)
         .order_by(Song.created_on.desc())
         .all()
@@ -40,7 +37,7 @@ def generate_song_html_structure(song_details, editable):
     user_playlists_dropdown_options = getUserPlaylistsDropdownOptions()
     edit_button = f'''<a class="editBtn" href="../edit_song/{song_details['song_id']}">Edit</a>
     <form id="deleteSongForm" action="/delete_song/{song_details['song_id']}" method="POST">
-    <button type="submit">Delete Song</button>
+    <button type="submit">Delete</button>
     </form>''' if editable else ''
 
     html_structure = f"""
@@ -51,12 +48,25 @@ def generate_song_html_structure(song_details, editable):
             <div class="songDetails">
                 <div class="songName">
                     <p>{song_details['name']}</p>
-                    <p>Album: {getAlbumFromId(song_details['album_id'])}</p>
+                    <p>Album: {getAlbumFromId(song_details['album_id']).name}</p>
                 </div>
                 <div class="songInfo">
                         <p>Artist: {song_details['artist_name']}</p>
                         <p>Genre: {song_details['genre']}</p>
-                        <p>Ratings: {', '.join(map(str, song_details['ratings']))}</p>
+                        <p>Ratings: {getAvgRating(song_details['song_id'])}</p>
+                        <div id="rating">
+                            <form method="POST" action="/add_rating">
+                                <input type="hidden" name="song_id" value="{song_details['song_id']}">                    
+                                <select id="rating" name="rating" required>
+                                    <option value="5">5</option>
+                                    <option value="4">4</option>
+                                    <option value="3">3</option>
+                                    <option value="2">2</option>
+                                    <option value="1">1</option>
+                                </select>
+                                <button type="submit">Rate</button>
+                            </form>
+                        </div>
                 </div>
             </div>
             <div class="songActions">
@@ -70,8 +80,8 @@ def generate_song_html_structure(song_details, editable):
                     </form>
                 </div>
                 <button class="playBtn" onclick="playSong('{song_details['song_id']}')">Play</button>
-                {edit_button}
             </div>
+            {edit_button}
         </div>
     """
     return html_structure
@@ -108,6 +118,7 @@ def generate_album_html_structure(album, editable):
                 <p>Genre: {album['genre']}</p>
                 <p>Artist: {album['artist']}</p>
                 <p>Status: {album['status']}</p>
+                <p>No. of songs: {getNoOfSongsInAlbum(album['album_id'])}</p>
                 <!-- Add more details as needed -->
                 <a href="../album/{album['album_id']}">View Album</a>
                 {'<a href="../edit_album/' + album['album_id'] + '">Edit Album</a><form id="deleteAlbumForm" action="/delete_album/' + album['album_id'] + '" method="POST"><button type="submit">Delete Album</button></form>' if editable else ''}
@@ -145,7 +156,11 @@ def generate_playlist_html_structure(playlist):
     return f"""
         <div class="playlist">
             <h2>{playlist['name']}</h2>
+            <h4>No. of songs : {getNoOfSongsInPlaylist(playlist['playlist_id'])}</h4>
             <a href="../playlist/{playlist['playlist_id']}">View Playlist</a>
+            <form id="deletePlaylistForm" action="{url_for('delete_playlist', playlist_id=playlist['playlist_id'])}" method="POST">
+                <button type="submit">Delete Playlist</button>
+            </form>
         </div>
     """
 
@@ -164,23 +179,21 @@ def album_and_song_content(album_id):
                     f"""
                     <div class="song">
                         <div class="songThumbnail">
-                            <img src="{song.thumbnail_path}" alt="Thumbnail">
+                            <img src="../{song.thumbnail_path}" alt="Thumbnail">
                         </div>
                         <div class="songDetails">
                             <div class="songName">{song.name}</div>
-                        </div>
-                        <div class="songActions">
-                            <button class="playBtn" onclick="playSong('{song.song_id}')">Play</button>
-                        </div>
+                        </div>    
                         <div class="addToPlaylistForm">
-                            <form method="POST" action="/add_to_playlist">
+                            <form method="POST" action="/add_to_playlist>
                                 <input type="hidden" name="song_id" value="{song.song_id}">
-                                <select name="playlist_id">
-                                    {user_playlists_dropdown_options}
-                                </select>
-                                <button type="submit">Add to Playlist</button>
+                                    <select name="playlist_id">
+                                        {user_playlists_dropdown_options}
+                                    </select>
+                                <button type="submit">Add to Playlist</button>                            
                             </form>
-                        </div>
+                        </div>    
+                        <button class="playBtn" onclick="playSong('{song.song_id}')">Play</button>
                     </div>
                 """).replace("\n", "")
 
@@ -207,13 +220,10 @@ def playlist_and_song_content(playlist_id):
                     f"""
                     <div class="song">
                         <div class="songThumbnail">
-                            <img src="{song.song.thumbnail_path}" alt="Thumbnail">
+                            <img src="../{song.song.thumbnail_path}" alt="Thumbnail">
                         </div>
                         <div class="songDetails">
                             <div class="songName">{song.song.name}</div>
-                        </div>
-                        <div class="songActions">
-                            <button class="playBtn" onclick="playSong('{song.song.song_id}')">Play</button>
                         </div>
                         <div class="addToPlaylistForm">
                             <form method="POST" action="/add_to_playlist">
@@ -224,6 +234,7 @@ def playlist_and_song_content(playlist_id):
                                 <button type="submit">Add to Playlist</button>
                             </form>
                         </div>
+                        <button class="playBtn" onclick="playSong('{song.song.song_id}')">Play</button>
                     </div>
                 """
                 ).replace("\n", "")

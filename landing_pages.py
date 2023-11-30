@@ -1,5 +1,6 @@
 from flask import render_template, url_for
 
+import util
 from app import db
 from creator_module import get_songs_by_user, get_albums_by_user
 from html_structure_render import get_all_songs, get_all_albums, generate_song_html_structure, \
@@ -188,7 +189,7 @@ def edit_song(song):
     header_left = "> Edit song"
     album_choices = getAlbumsForUser()
     album_choices = [(album.get("album_id"), album.get("name")) for album in album_choices]
-    content = render_template('edit_album.html', song=song, album_choices=album_choices)
+    content = render_template('edit_song.html', song=song, album_choices=album_choices)
     current_song = "Now Playing: None"
     return render_template('parent_frame.html', content=content, current_song=current_song, header_left=header_left,
                            nav_elements=nav_elements)

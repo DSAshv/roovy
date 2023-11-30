@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Enum, ForeignKey, Date, Float, DateTime, UniqueConstraint
+from sqlalchemy import Column, String, Enum, ForeignKey, Date, Float, DateTime, UniqueConstraint, Integer
 from sqlalchemy.orm import relationship
 from app import db, app
 
@@ -59,6 +59,7 @@ class Rating(Base):
     __tablename__ = 'RATING'
 
     song_id = Column(String, ForeignKey('SONG.song_id'), primary_key=True)
+    count = Column(Integer, nullable=False)
     rating = Column(Float, nullable=False)
 
     song = relationship("Song", back_populates="ratings")
