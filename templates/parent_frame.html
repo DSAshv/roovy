@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="../static/parent_frame.css">
     <script src="../static/parent_frame.js"></script>
     <title>Music App</title>
@@ -23,11 +25,27 @@ True
     <div id="header">
         <div id="headerLeft">{{ header_left }}</div>
         <div id="headerRight">
-            <input placeholder="search song/album/artist" id="searchBar">
-            <div id="search">&#128269;</div>
+            <div id="search">
+                <form action="/search" method="POST">
+                    <input type="text" id="searchBar" name="searchQuery" placeholder="Search songs/albums">
+                    <button type="submit">&#128269;</button>
+                </form>
+            </div>
+
             <div id="profile"><a href="../profile">Profile</a></div>
             <div id="logOut"><a href="../logout">Log out</a></div>
         </div>
+    </div>
+    <div id="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
     </div>
 
     <div id="mainContent">

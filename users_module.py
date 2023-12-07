@@ -1,37 +1,42 @@
+import os
+
+from flask import url_for
 from sqlalchemy.orm import joinedload, aliased
+
+from app import app
 from models import Album, SongContent, Rating
 from util import get_uid, generate_unique_string, formatDate, getNameFromId
 
 
-def addAlbumToDB(request):
+def addAlbumToDB(request, thumbnail_path):
     try:
         new_album = Album(
             album_id=generate_unique_string(),
             name=request.form.get("name"),
             genre=request.form.get("genre"),
             artist=getNameFromId(),
-            thumbnail_path=request.form.get("thumbnail_path"),
+            thumbnail_path=thumbnail_path,
             status='live',
             created_by=get_uid(),
             created_on=formatDate(request.form.get("created_on"))
         )
         db.session.add(new_album)
         db.session.commit()
+        db.session.close()
         return True
     except Exception as e:
         db.session.rollback()
         return False
 
 
-def addSongToDB(request):
+def addSongToDB(request, content_path, thumbnail_path):
     song_id = generate_unique_string()
     name = request.form.get('name')
     created_on = formatDate(request.form.get('created_on'))
     status = request.form.get('status')
     album_id = request.form.get('album_id')
-    thumbnail_path = request.form.get('thumbnail_path')
     song_type = request.form.get('type')
-    content_path = request.form.get('content_path')
+
 
     if not (name and created_on and status and album_id and thumbnail_path and song_type and content_path):
         return False, {"error": "missing parameter"}
@@ -55,6 +60,7 @@ def addSongToDB(request):
         new_song.content = new_content
         db.session.add(new_song)
         db.session.commit()
+        db.session.close()
         return True
 
     except Exception as e:
@@ -73,6 +79,7 @@ def editSongInDB(request, song):
 
     try:
         db.session.commit()
+        db.session.close()
         return True
     except Exception as e:
         db.session.rollback()
@@ -88,6 +95,7 @@ def editAlbumInDB(request, album):
 
     try:
         db.session.commit()
+        db.session.close()
         return True
     except Exception as e:
         db.session.rollback()
@@ -163,6 +171,7 @@ def addPlaylist(name):
             )
             db.session.add(new_playlist)
             db.session.commit()
+            db.session.close()
             return True
         else:
             return False
@@ -185,6 +194,7 @@ def addSongToPlaylist(song_id, playlist_id):
                 songs_in_playlist = SongsInPlaylist(song_id=song_id, playlist_id=playlist_id)
                 db.session.add(songs_in_playlist)
                 db.session.commit()
+                db.session.close()
                 return True, "Song added to playlist successfully"
             else:
                 return False, "Song is already in the playlist"
@@ -199,11 +209,12 @@ def addSongToPlaylist(song_id, playlist_id):
 
 def deleteAlbum(album_id):
     try:
-        album = db.session.query(Album).filter_by(album_id=album_id)
+        album = db.session.query(Album).filter_by(album_id=album_id).first()
 
         if album:
             db.session.delete(album)
             db.session.commit()
+            db.session.close()
             return True
         else:
             return False
@@ -215,10 +226,12 @@ def deleteAlbum(album_id):
 def deleteSong(song_id):
     try:
         song = db.session.query(Song).filter_by(song_id=song_id).first()
-
+        delete_statement = SongContent.__table__.delete().where(SongContent.song_id == song_id)
+        db.session.execute(delete_statement)
         if song:
             db.session.delete(song)
             db.session.commit()
+            db.session.close()
             return True
         else:
             return False
@@ -235,6 +248,7 @@ def deletePlaylist(playlist_id):
         if playlist:
             db.session.delete(playlist)
             db.session.commit()
+            db.session.close()
         else:
             return False
 
@@ -255,6 +269,7 @@ def addRating(song_id, score):
             rating.rating += float(score)
 
         db.session.commit()
+        db.session.close()
         return True
 
     except Exception as e:
@@ -281,12 +296,15 @@ def playSong(song_id):
         </div>
         """
         toReturn += generate_player_content_template(html_content, data[0].thumbnail_path)
+        return [url_for('static', filename=data[1].content_path, _external=True), toReturn]
     else:
-        with open(data[1].content_path, 'r') as file:
+        file_path = os.path.join(app.static_folder, data[1].content_path)
+        with open(file_path, 'r') as file:
             file_content = file.read()
-        toReturn += generate_player_content_template(f'<div>{file_content}</div>', data[0].thumbnail_path)
+        toReturn += generate_player_content_template(f'{file_content}', data[0].thumbnail_path)
+        return ["", toReturn]
 
-    return [data[1].content_path, toReturn]
+
 
 
 def get_songs_with_content_and_album(song_id):
@@ -311,10 +329,64 @@ def get_songs_with_content_and_album(song_id):
 def generate_player_content_template(song_content, thumbnail_path):
     return f"""
     <div id="playerContentThumbnail">
-        <img src="{thumbnail_path}" alt="Thumbnail">
+        <img src="{url_for('static', filename=thumbnail_path, _external=True)}" alt="Thumbnail">
     </div>
 
     <div id="playerActualContent">
         {song_content}
     </div>
     """
+
+
+def searchSongs(search_query):
+    songs_with_details = (
+        db.session.query(Song, Album)
+        .outerjoin(Rating, Song.song_id == Rating.song_id)
+        .options(joinedload(Song.ratings))
+        .join(Album, Song.album_id == Album.album_id)
+        .filter(Song.name.ilike(f'%{search_query}%'))
+        .order_by(Song.created_on.desc())
+        .all()
+    )
+
+    all_songs = []
+    for song, album in songs_with_details:
+        song_dict = {
+            "song_id": song.song_id,
+            "name": song.name,
+            "created_on": song.created_on,
+            "status": song.status,
+            "album_id": song.album_id,
+            "thumbnail_path": song.thumbnail_path,
+            "ratings": [rating.rating for rating in song.ratings] if song.ratings else [0],
+            "album_name": album.name,
+            "artist_name": album.artist,
+            "genre": album.genre
+        }
+        all_songs.append(song_dict)
+
+    all_songs_tuple = tuple(all_songs)
+    return all_songs_tuple
+
+
+def searchAlbums(search_query):
+    try:
+        all_albums = db.session.query(Album).filter(Album.name.ilike(f'%{search_query}%')).order_by(
+            Album.created_on.desc()).all()
+        albums_list = []
+        for album in all_albums:
+            album_details = {
+                "album_id": album.album_id,
+                "name": album.name,
+                "genre": album.genre,
+                "artist": album.artist,
+                "thumbnail_path": album.thumbnail_path,
+                "status": album.status,
+            }
+            albums_list.append(album_details)
+
+        return albums_list
+
+    except Exception as e:
+        print(f"Error fetching albums: {e}")
+        return []

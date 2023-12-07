@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Details</title>
+</head>
+<style>
+
+    .ut{
+        width:100%;
+    }
+                table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+
+            th {
+                background-color: #f2f2f2;
+            }
+
+            tr:hover {
+                background-color: #f5f5f5;
+            }
+
+            select {
+                padding: 5px;
+            }
+</style>
+<body>
+<h2>Account Details</h2>
+<table class="ut" border="1">
+    <thead>
+    <tr>
+        <th>Email</th>
+        <th>Name</th>
+        <th>Role</th>
+        <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for user in users %}
+    <tr>
+        <td>{{ user.email }}</td>
+        <td>{{ user.name }}</td>
+        <td>{{ user.role }}</td>
+        <td>
+            <form method="POST" action="{{ url_for('edit_acc_status') }}">
+                <select name="new_status">
+                    <option value="flagged" {% if user.status==
+                    'flagged' %}selected{% endif %}>Flagged</option>
+                    <option value="blocked" {% if user.status==
+                    'blocked' %}selected{% endif %}>Blocked</option>
+                    <option value="live" {% if user.status==
+                    'live' %}selected{% endif %}>Live</option>
+                </select>
+                <input type="hidden" name="user_id" value="{{ user.user_id }}">
+                <button type="submit">Update</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>

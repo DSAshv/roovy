@@ -3,7 +3,7 @@ a{
     color:#333;
 }
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
     overflow: hidden;
@@ -225,6 +225,9 @@ body {
     text-decoration: none;
     border-radius: 5px;
 }
+.editAlbum{
+    pointer-events:all;
+}
 
 .album a:hover, .album button:hover {
     background-color: #0056b3;
@@ -257,7 +260,7 @@ body {
 }
 
 .song .songName {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     margin-bottom: 5px;
     padding:10px 5px;
@@ -308,6 +311,7 @@ body {
     cursor: pointer;
     border-radius: 4px;
     margin-right:10px;
+    pointer-events:all;
 }
 
 .songActions {
@@ -373,10 +377,12 @@ body {
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
+    pointer-events: all;
 }
 
 #deletePlaylistForm button:hover {
     background-color: #d32f2f;
+    pointer-events: all;
 }
 
 .editSong {
@@ -476,6 +482,7 @@ a.delete-link {
     text-decoration: none;
     cursor: pointer;
     margin-right: 10px;
+    pointer-events: all;
 }
 
 a.delete-link:hover {
@@ -556,6 +563,7 @@ a.delete-link:hover {
     font-size: 16px;
     cursor: pointer;
     border-radius: 4px;
+    pointer-events: all;
 }
 
 #rating {
@@ -587,7 +595,7 @@ a.delete-link:hover {
 #player #expand{
     transform: rotate(90deg);
     position:absolute;
-    top:-40px;
+    top:-45px;
     right:50%;
     font-size:40px;
     color:grey;
@@ -609,24 +617,67 @@ a.delete-link:hover {
 #playerContent.show {
   display: flex;
   opacity: 1;
-  height: 90vh;
+  height: 87vh;
 }
 
 
 #playerContent #playerContentThumbnail{
     padding:20px;
-    width:70%;
+    min-width:50%;
+    text-align:center;
 }
  #playerContent #playerContentThumbnail img{
     object-fit: cover;
-    width:100%;
+    max-width: 100%;
+    max-height: 400px;
  }
 
 #playerContent #playerActualContent{
-    width:30%;
     padding:30px;
     display:flex;
     flex-direction:column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 400px;
+    line-height:40px;
 }
 
+#flash-container {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    margin-top: 20px;
+    z-index: 9999;
+    text-align:center;
+}
 
+.flash-message {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 20px;
+    box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px, rgba(0, 0, 0, 0.22) 0px 15px 12px;
+}
+
+.success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.error {
+    background-color: #f44336;
+    color: white;
+}
+
+.blocked{
+    pointer-events:none;
+    background-color: #4CAF50;
+    filter: grayscale(100%);
+}
+
+#search button{
+    border: 0px;
+    background-color: transparent;
+    cursor: pointer;
+}

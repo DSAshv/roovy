@@ -40,7 +40,7 @@ class Song(Base):
     created_by = Column(String, nullable=False)
 
     album = relationship("Album", back_populates="songs")
-
+    content = relationship("SongContent", back_populates="song", cascade="all, delete-orphan")
 
 class SongContent(Base):
     __tablename__ = 'SONG_CONTENT'

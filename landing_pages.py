@@ -1,19 +1,44 @@
 from flask import render_template, url_for
 
-import util
+import account_module
 from app import db
-from creator_module import get_songs_by_user, get_albums_by_user
+from users_module import get_songs_by_user, get_albums_by_user
 from html_structure_render import get_all_songs, get_all_albums, generate_song_html_structure, \
     generate_album_html_structure, get_all_playlists, generate_playlist_html_structure, album_and_song_content, \
-    playlist_and_song_content
+    playlist_and_song_content, overview_html
 from models import Album
 from util import get_uid, getSongFromId, getAlbumFromId, getPlaylistFromId, getAlbumsForUser
 
 nav_elements = ()
-
 def setNavElems(elems):
     global nav_elements
     nav_elements = elems
+
+
+def adminLandingPage(content='Overview'):
+    setNavElems((
+        {'title': 'Overview', 'url': '../admin-overview', 'class': 'first'},
+        {'title': 'Accounts', 'url': '../accounts', },
+        {'title': 'Songs', 'url': '../admin-songs'},
+    ))
+    if content == "Accounts":
+        header_left = "> Accounts Overview"
+        content = render_template("dashboard_accounts.html", users=account_module.getAllUsers())
+        current_song = ""
+        return render_template('parent_frame.html', header_left=header_left, content=content, current_song=current_song,
+                               nav_elements=nav_elements)
+    elif content == "Songs":
+        header_left = "> Songs Overview"
+        content = render_template("dashboard_songs.html", all_songs=get_all_songs())
+        current_song = ""
+        return render_template('parent_frame.html', header_left=header_left, content=content, current_song=current_song,
+                               nav_elements=nav_elements)
+    elif content == "Overview":
+        header_left = ">Overview"
+        content = overview_html()
+        current_song = ""
+        return render_template('parent_frame.html', header_left=header_left, content=content, current_song=current_song,
+                               nav_elements=nav_elements)
 
 
 def userLandingPage(content="songs", request=None):
@@ -35,11 +60,8 @@ def userLandingPage(content="songs", request=None):
             return getAlbumAndSongs(id)
         elif module == "playlist":
             return getPlaylistAndSongs(id)
-
-
-def adminLandingPage():
-    return "admin page"
-
+    elif content == "search":
+        return returnSearchPage(request)
 
 def creatorLandingPage(content="songs", request=None):
     setNavElems((
@@ -80,6 +102,8 @@ def creatorLandingPage(content="songs", request=None):
             return getAlbumAndSongs(id)
         elif module == "playlist":
             return getPlaylistAndSongs(id)
+    elif content == "search":
+        return returnSearchPage(request)
 
 
 def getSongs():
@@ -144,8 +168,6 @@ def render_songs_content():
     for song_details in all_songs_tuple:
         html += generate_song_html_structure(song_details, False)
     return html
-
-
 def render_my_songs_content():
     all_songs_tuple = get_songs_by_user()
     html = ""
@@ -216,4 +238,15 @@ def getPlaylistAndSongs(id):
     content = playlist_and_song_content(id)
     current_song = "Now Playing: Album Name"
     return render_template('parent_frame.html', header_left=header_left, content=content, current_song=current_song,
+                           nav_elements=nav_elements)
+
+
+def returnSearchPage(details):
+    header_left = "> Search Results "
+    content = ""
+    for song_details in details[0]:
+        content += generate_song_html_structure(song_details, False)
+    for album_details in details[1]:
+        content += generate_album_html_structure(album_details, False)
+    return render_template('parent_frame.html', header_left=header_left, content=content, current_song="",
                            nav_elements=nav_elements)

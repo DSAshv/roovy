@@ -10,6 +10,7 @@ def signup(user_id, email, name, role, password, status='live'):
         db.session.add(new_user)
         db.session.add(credentials)
         db.session.commit()
+        db.session.close()
         return True
 
     except Exception as e:
@@ -37,11 +38,13 @@ def authorizeUser(email, password, role):
 def updateProfile(request, user_id):
     try:
         user = User.query.get(user_id)
+        credentials = UserCredentials.query.get(user_id)
         user.name = request.form.get('name')
         user.email = request.form.get('email')
         credentials.password = generate_password_hash(request.form.get('password'))
 
         db.session.commit()
+        db.session.close()
         return True
     except IntegrityError:
         db.session.rollback()
@@ -49,3 +52,47 @@ def updateProfile(request, user_id):
 
 def getUser(uid):
     return User.query.get(uid)
+
+
+def changeAccStatus(user_id, status):
+    try:
+        user = User.query.get(user_id)
+        user.status = status
+        db.session.commit()
+        db.session.close()
+        return True
+    except IntegrityError:
+        db.session.rollback()
+        return False
+
+
+def changeSongStatus(song_id, status):
+    try:
+        song = Song.query.get(song_id)
+        song.status = status
+        db.session.commit()
+        db.session.close()
+        return True
+    except IntegrityError:
+        db.session.rollback()
+        return False
+
+
+def getUserStatus(user_id):
+    user = User.query.get(user_id)
+    if (user.status == "blocked"):
+        return False
+    return True
+
+
+def getAllUsers():
+    return db.session.query(User).all()
+
+
+def getAllSongs():
+    return (
+        db.session.query(Song, Album)
+        .join(Album, Song.album_id == Album.album_id)
+        .order_by(Song.created_on.desc())
+        .all()
+    )

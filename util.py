@@ -24,12 +24,14 @@ def getSongFromId(song_id):
 def getAlbumFromId(album_id):
     return Album.query.get(album_id)
 
-
 def getPlaylistFromId(playlist_id):
     return Playlist.query.get(playlist_id)
 def formatDate(created_on_str):
     return datetime.fromisoformat(created_on_str)
 
+
+def getAlbumStatus(album_id):
+    return Album.query.get(album_id).status
 
 def getPlaylistsForUser():
     try:

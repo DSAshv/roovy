@@ -1,0 +1,14 @@
+<h2>User Count by Role</h2>
+
+<table>
+    <tr>
+        <th>Role</th>
+        <th>User Count</th>
+    </tr>
+    {% for role, user_count in user_count_by_role %}
+    <tr>
+        <td>{{ role }}</td>
+        <td>{{ user_count }}</td>
+    </tr>
+    {% endfor %}
+</table>

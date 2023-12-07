@@ -45,7 +45,7 @@
     }
 </style>
 <div id="addsong">
-    <form method="POST" action="{{ url_for('createSong') }}">
+    <form method="POST" action="{{ url_for('createSong') }}" enctype="multipart/form-data">
     {{ csrf_token }}
 
     <div>
@@ -78,7 +78,7 @@
 
     <div>
         <label for="thumbnail_path">Thumbnail Path:</label>
-        <input type="text" id="thumbnail_path" name="thumbnail_path" required>
+        <input type="file" id="thumbnail_path" name="thumbnail_path" accept=".jpeg, .jpg, .png, .webp" required>
     </div>
 
     <div>
@@ -91,7 +91,7 @@
 
     <div>
         <label for="content_path">Content Path:</label>
-        <input type="text" id="content_path" name="content_path" required>
+        <input type="file" id="content_path" name="content_path" accept=".txt, .mp3" required>
     </div>
 
     <div>
@@ -106,4 +106,18 @@
 <script>
     var currentDatetime = new Date().toISOString().slice(0, 16);
     document.getElementById("created_on").value = currentDatetime;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var typeSelect = document.getElementById("type");
+        var contentPathInput = document.getElementById("content_path");
+
+        typeSelect.addEventListener("change", function() {
+            if (typeSelect.value === "lyric") {
+                contentPathInput.accept = ".txt";
+            } else if (typeSelect.value === "song") {
+                contentPathInput.accept = ".mp3";
+            }
+        });
+    });
+
 </script>

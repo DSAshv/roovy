@@ -25,14 +25,15 @@
         </div>
 
         <div>
-            <label for="album_id">Album ID:</label>
+            <label for="album_id">Album:</label>
             <select id="album_id" name="album_id" required>
-                {% for album in album_choices %}
-                <option value="{{ album_id }}" {% if song.album_id== album[0] %}selected{% endif %}>{{ album[1] }}
+                {% for album_id, album_name in album_choices %}
+                <option value="{{ album_id }}" {% if song.album_id== album_id %}selected{% endif %}>{{ album_name }}
                 </option>
                 {% endfor %}
             </select>
         </div>
+
 
         <div>
             <label for="thumbnail_path">Thumbnail Path:</label>

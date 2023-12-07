@@ -1,9 +1,12 @@
-from flask import url_for
-from app import db
-from creator_module import getAvgRating
-from models import Song, Album, Playlist, User
+from flask import url_for, render_template
+from sqlalchemy import func, outerjoin, desc
 
-from util import getPlaylistsForUser, get_uid, getAlbumFromId, getNoOfSongsInAlbum, getNoOfSongsInPlaylist
+from app import db
+from users_module import getAvgRating
+from models import Song, Album, Playlist, User, Rating
+
+from util import getPlaylistsForUser, get_uid, getAlbumFromId, getNoOfSongsInAlbum, getNoOfSongsInPlaylist, \
+    getAlbumStatus
 
 
 def get_all_songs():
@@ -23,7 +26,7 @@ def get_all_songs():
             "status": song.status,
             "album_id": song.album_id,
             "thumbnail_path": song.thumbnail_path,
-            "ratings": [rating.rating for rating in song.ratings] if song.ratings else [0],
+            "ratings": getAvgRating(song.song_id),
             "album_name": album.name,
             "artist_name": album.artist,
             "genre": album.genre
@@ -41,9 +44,9 @@ def generate_song_html_structure(song_details, editable):
     </form>''' if editable else ''
 
     html_structure = f"""
-        <div class="song">
+        <div class="song {song_details['status']} {getAlbumStatus(song_details['album_id'])}">
             <div class="songThumbnail">
-                <img src="{song_details['thumbnail_path']}" alt="Thumbnail">
+                <img src="{url_for('static', filename=song_details['thumbnail_path'], _external=True)}" alt="Thumbnail">
             </div>
             <div class="songDetails">
                 <div class="songName">
@@ -79,7 +82,7 @@ def generate_song_html_structure(song_details, editable):
                         <button type="submit">Add to Playlist</button>
                     </form>
                 </div>
-                <button class="playBtn" onclick="playSong('{song_details['song_id']}')">Play</button>
+                <button class="playBtn" onclick="playSong('{song_details['song_id'] if song_details['status'] != 'blocked' else ""}')">Play</button>
             </div>
             {edit_button}
         </div>
@@ -89,7 +92,7 @@ def generate_song_html_structure(song_details, editable):
 
 def get_all_albums():
     try:
-        all_albums = db.session.query(Album).all()
+        all_albums = db.session.query(Album).order_by(Album.created_on.desc()).all()
         albums_list = []
         for album in all_albums:
             album_details = {
@@ -111,8 +114,8 @@ def get_all_albums():
 
 def generate_album_html_structure(album, editable):
     html_structure = f"""
-        <div class="album">
-            <img src="{album['thumbnail_path']}" alt="{album['name']} Thumbnail">
+        <div class="album {album['status']}">
+            <img src="{url_for('static', filename=album['thumbnail_path'], _external=True)}" alt="{album['name']} Thumbnail">
             <div class="albumDetails">
                 <h2>{album['name']}</h2>
                 <p>Genre: {album['genre']}</p>
@@ -120,8 +123,8 @@ def generate_album_html_structure(album, editable):
                 <p>Status: {album['status']}</p>
                 <p>No. of songs: {getNoOfSongsInAlbum(album['album_id'])}</p>
                 <!-- Add more details as needed -->
-                <a href="../album/{album['album_id']}">View Album</a>
-                {'<a href="../edit_album/' + album['album_id'] + '">Edit Album</a><form id="deleteAlbumForm" action="/delete_album/' + album['album_id'] + '" method="POST"><button type="submit">Delete Album</button></form>' if editable else ''}
+                <a href="../album/{album['album_id'] if (album['status'] != 'blocked') else ""}">View Album</a>
+                {'<a class="editAlbum" href="../edit_album/' + album['album_id'] + '">Edit Album</a><form id="deleteAlbumForm" action="/delete_album/' + album['album_id'] + '" method="POST"><button type="submit">Delete Album</button></form>' if editable else ''}
             </div>
         </div>
     """
@@ -177,9 +180,9 @@ def album_and_song_content(album_id):
             for song in songs_in_album:
                 song_html_list += (
                     f"""
-                    <div class="song">
+                    <div class="song {song.status}">
                         <div class="songThumbnail">
-                            <img src="../{song.thumbnail_path}" alt="Thumbnail">
+                            <img src="{url_for('static', filename=song.thumbnail_path, _external=True)}" alt="Thumbnail">
                         </div>
                         <div class="songDetails">
                             <div class="songName">{song.name}</div>
@@ -193,7 +196,7 @@ def album_and_song_content(album_id):
                                 <button type="submit">Add to Playlist</button>                            
                             </form>
                         </div>    
-                        <button class="playBtn" onclick="playSong('{song.song_id}')">Play</button>
+                        <button class="playBtn" onclick="playSong('{song.song_id if song.status != 'blocked' else ""}')">Play</button>
                     </div>
                 """).replace("\n", "")
 
@@ -218,9 +221,9 @@ def playlist_and_song_content(playlist_id):
             for song in songs_in_playlist:
                 song_html_list += (
                     f"""
-                    <div class="song">
+                    <div class='song {song.song.status}'>
                         <div class="songThumbnail">
-                            <img src="../{song.song.thumbnail_path}" alt="Thumbnail">
+                            <img src="{url_for('static', filename=song.song.thumbnail_path, _external=True)}" alt="Thumbnail">
                         </div>
                         <div class="songDetails">
                             <div class="songName">{song.song.name}</div>
@@ -234,7 +237,7 @@ def playlist_and_song_content(playlist_id):
                                 <button type="submit">Add to Playlist</button>
                             </form>
                         </div>
-                        <button class="playBtn" onclick="playSong('{song.song.song_id}')">Play</button>
+                        <button class="playBtn" onclick="playSong('{song.song_id if song.status != "blocked" else ''}')">Play</button>
                     </div>
                 """
                 ).replace("\n", "")
@@ -254,3 +257,36 @@ def getUserPlaylistsDropdownOptions():
     for playlist in user_playlists:
         options += f"<option value='{playlist['playlist_id']}'>{playlist['name']}</option>"
     return options
+
+
+def overview_html():
+    total_songs = db.session.query(func.count(Song.song_id)).scalar()
+    total_albums = db.session.query(func.count(Album.album_id)).scalar()
+
+    album_info = db.session.query(
+        Album.name,
+        func.count(Song.song_id).label('total_songs'),
+        Album.created_on
+    ).join(Song).group_by(Album.album_id).all()
+
+    songsCount = render_template('songs_and_album_count.html', songs_count=total_songs, albums_count=total_albums,
+                                 album_info=album_info)
+
+    user_count_by_role = db.session.query(User.role, func.count(User.user_id).label('user_count')).group_by(
+        User.role).all()
+
+    usersCount = render_template('user_count_by_role.html', user_count_by_role=user_count_by_role)
+
+    top_rated_songs = (
+        db.session.query(Song, Rating)
+        .join(Rating, Song.song_id == Rating.song_id)
+        .with_entities(Song, Rating.rating / Rating.count)
+        .order_by((Rating.rating / Rating.count).desc())
+        .limit(10)
+        .all()
+    )
+
+    songRating = render_template('top_rated_songs.html', top_rated_songs=top_rated_songs)
+    db.session.close()
+
+    return render_template("overview.html", usersCount=usersCount, songsCount=songsCount, songRating=songRating)

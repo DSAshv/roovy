@@ -46,7 +46,7 @@
 
 </style>
 <div id="addalbum">
-    <form method="POST" action="{{ url_for('createAlbum') }}">
+    <form method="POST" action="{{ url_for('createAlbum') }}" enctype="multipart/form-data">
         {{ csrf_token }}
 
         <div>
@@ -61,7 +61,7 @@
 
         <div>
             <label for="thumbnail_path">Thumbnail Path:</label>
-            <input type="text" id="thumbnail_path" name="thumbnail_path" required>
+            <input type="file" id="thumbnail_path" name="thumbnail_path" accept=".jpeg, .jpg, .png, .webp" required>
         </div>
 
         <div>

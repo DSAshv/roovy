@@ -1,0 +1,27 @@
+<h2>Songs and Album Count</h2>
+<table>
+    <tr>
+        <th>Songs Count</th>
+        <th>Albums Count</th>
+    </tr>
+    <tr>
+        <td>{{ songs_count }}</td>
+        <td>{{ albums_count }}</td>
+    </tr>
+</table>
+
+<h2>No. of Songs in each Album</h2>
+<table>
+    <tr>
+        <th>Album Name</th>
+        <th>Songs Count</th>
+        <th>Created On</th>
+    </tr>
+    {% for album in album_info %}
+    <tr>
+        <td>{{ album[0] }}</td>
+        <td>{{ album[1] }}</td>
+        <td>{{ album[2] }}</td>
+    </tr>
+    {% endfor %}
+</table>
