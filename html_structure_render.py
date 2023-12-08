@@ -253,7 +253,7 @@ def playlist_and_song_content(playlist_id):
 
 def getUserPlaylistsDropdownOptions():
     user_playlists = getPlaylistsForUser()
-    options = ""
+    options = "<option value="" disabled selected>Select an option</option>"
     for playlist in user_playlists:
         options += f"<option value='{playlist['playlist_id']}'>{playlist['name']}</option>"
     return options
