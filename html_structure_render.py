@@ -237,7 +237,7 @@ def playlist_and_song_content(playlist_id):
                                 <button type="submit">Add to Playlist</button>
                             </form>
                         </div>
-                        <button class="playBtn" onclick="playSong('{song.song_id if song.status != "blocked" else ''}')">Play</button>
+                        <button class="playBtn" onclick="playSong('{song.song.song_id if song.song.status != "blocked" else ''}')">Play</button>
                     </div>
                 """
                 ).replace("\n", "")
